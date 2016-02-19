@@ -1,6 +1,6 @@
 # NSAway
 
-![usbkill](icons/nsaway.png)
+![nsaway](icons/nsaway.png)
 
 Work In Progress.
 

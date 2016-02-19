@@ -1,0 +1,34 @@
+- Controllo sulle sorgenti video in uso
+- Controllo sulle registrazioni audio dai microfoni
+- Controllo delle azioni sudo/root
+- Controllo delle porte in ascolto (TCP e UDP)
+- Controllo di inserimento/rimozione USB
+- Controllo data di modifica di files di configurazione sensibili /etc/hosts, /etc/passwd, /etc/shadow
+- Controllo MiTM/SSLstrip
+
+- start-stop-daemon
+- Halt Notify (daemon keep logging) + Restart Report
+
+- Safe-Checkpoint (the system is Safe) [json]
+- Configuration file [ini]
+
+##############################################################
+
+which notify-send
+which pacmd
+which netstat
+which lsusb
+
+notify-send -i /usr/share/icons/nsa-away.png "Ciao" "<span color='blue'><i><b>Ciao</b></i></span>"
+
+pacmd list-source-outputs | grep -A25 'index: ' | grep -A25 'flags: $' | grep -A25 `pactl info | grep '^.*\Default Source: .*$' | awk '{print $3}'` | grep 'application.process.id' | awk -F\" '{print $2}'
+
+ls -l -R /proc 2> /dev/null | grep /dev/video
+
+grep sudo /var/log/auth.log /var/log/messages /var/log/secure
+
+netstat -nat | grep LISTEN
+
+lsusb
+
+stat -c '%X|%Y|%Z' /etc/hosts

@@ -1,3 +1,7 @@
+# TODO
+# Find a better distribution tool. I HATE PYTHON ALREADY.
+
+'''
 # Based on setup.py from https://github.com/pypa/sampleproject
 
 from setuptools import setup, find_packages
@@ -35,3 +39,4 @@ setup(
         ],
     },
 )
+'''

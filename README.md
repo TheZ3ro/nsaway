@@ -6,7 +6,7 @@
 
 NSAway is a Military-Grade® Snooper Detection System (last generation IDS).
 
-I'm kidding, It's just a daemon that listen for some (suspicious) event.
+I'm kidding, It's just a daemon that listen for some (suspicious) events.
 
 The name comes from NSA-Away (keep the NSA away from your PC) or from NSA-Way (do things the NSA way, Paranoid mode On).
 
@@ -23,7 +23,7 @@ Otherwise this program can be useful if:
 
 
 ### Credits
-Based on code form [hephaest0s/USBkill](https://github.com/hephaest0s/usbkill/)<br/>
-Based on idea form [LCyberspazio/eyecatcher](https://github.com/LCyberspazio/eyefinder)<br/><br/>
+Based on code from [hephaest0s/USBkill](https://github.com/hephaest0s/usbkill/)<br/>
+Based on idea from [LCyberspazio/eyecatcher](https://github.com/LCyberspazio/eyefinder)<br/><br/>
 Eagle Icon by: Martin Berube<br/>
 Alert Icon by: [Nitish Kumar](https://www.iconfinder.com/nitishkmrk)<br/>

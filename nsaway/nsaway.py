@@ -47,7 +47,7 @@ def load_plugin(name):
 
 def call_plugin(name, fn, *args, **kwargs):
     plugin = load_plugin(name)
-    getattr(plugin, fn)(*args, **kwargs)
+    return getattr(plugin, fn)(*args, **kwargs)
 
 """
 Load settings from filename
@@ -90,6 +90,7 @@ def load_settings(filename):
 
   # Build settings
   settings = dict({
+    'timeout_cycle' : get_setting('timeout', 'INT'),
     'sleep_time' : get_setting('sleep', 'FLOAT'),
     'plugins' : jsonloads(get_setting('plugins').strip())
   })
@@ -113,11 +114,23 @@ def loop(settings):
   if settings['daemon'] == False:
     sys.exit(1)
 
+  timeout = {}
+
   # Main loop
   while True:
-    # TODO Partolling
+    # Partolling
     for plugin in settings['plugins']:
-      call_plugin(plugin, 'tick')
+      if not plugin in timeout:
+        msg = call_plugin(plugin, 'tick')
+        if msg != None:
+          # Safe call, don't use os.system here!
+          subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',msg])
+          timeout[plugin] = settings['timeout_cycle']
+      else:
+        if timeout[plugin]<=0:
+          timeout.pop(plugin)
+        else:
+          timeout[plugin] -= 1
 
     sleep(settings['sleep_time'])
 
@@ -164,6 +177,16 @@ def startup_checks():
       print("[NOTICE] Copying bin/nsaway.ini to " + SETTINGS_FILE )
     log(LogLevel.NOTICE,"Copying bin/nsaway.ini to " + SETTINGS_FILE )
     os.system("cp " + source + " " + SETTINGS_FILE)
+
+  # On first use check if there is icon file
+  if not os.path.isfile(ICON_FILE):
+    source = os.path.join(SOURCES_PATH, "../icons/")
+    if not os.path.isdir(source):
+      exit_log(LogLevel.ERROR,"You have lost your icon file. Get a new copy of the icons/ folder and place it in " + SOURCES_PATH + "/")
+    if not daemon:
+      print("[NOTICE] Copying icons/ to " + ICON_FILE )
+    log(LogLevel.NOTICE,"Copying icons/ to " + ICON_FILE )
+    os.system("cp -R " + source + " " + ICON_PATH)
 
   # Load settings
   settings = load_settings(SETTINGS_FILE)

@@ -21,9 +21,11 @@ import os, sys
 
 # Set the settings filename here
 SETTINGS_FILE = '/etc/nsaway.ini'
-
 # Logfile is hardcoded
 LOG_FILE = '/var/log/nsaway.log'
+# iconfile is hardcoded
+ICON_PATH = '/usr/share/pixmaps/nsaway/'
+ICON_FILE = ICON_PATH+'nsaway_mini.png'
 
 def local_import(name, globals=None, locals=None, fromlist=None):
     # Fast path: see if the module has already been imported.

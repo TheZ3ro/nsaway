@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 setup(
     name="nsaway",
     version="0.1.0",
-    description=".",
+    description="NSAway.",
     long_description="For a detailed description, see https://github.com/TheZ3ro/nsaway.",
     url="https://github.com/TheZ3ro/nsaway",
     author="TheZero",
@@ -27,9 +27,11 @@ setup(
     ],
     keywords="ids intrusion detection system",
     packages=find_packages(),
+    data_files=[('/etc/nsaway.ini', ['config/nsaway.ini']),
+                ('/usr/share/pixmaps/nsaway/', ['icons/nsaway_large.png','icons/nsaway_mini.png','icons/nsaway.png'])],
     entry_points={
         "console_scripts": [
-            "maybe = maybe.maybe:main",
+            "nsaway = nsaway.nsaway:main",
         ],
     },
 )

@@ -170,12 +170,12 @@ def startup_checks():
 
   # On first use copy nsaway.ini to /etc/nsaway.ini
   if not os.path.isfile(SETTINGS_FILE) or copy_settings:
-    source = os.path.join(SOURCES_PATH, "../bin/nsaway.ini")
+    source = os.path.join(SOURCES_PATH, "../config/nsaway.ini")
     if not os.path.isfile(source):
       exit_log(LogLevel.ERROR,"You have lost your settings file. Get a new copy of the nsaway.ini and place it in /etc/ or in " + SOURCES_PATH + "/")
     if not daemon:
-      print("[NOTICE] Copying bin/nsaway.ini to " + SETTINGS_FILE )
-    log(LogLevel.NOTICE,"Copying bin/nsaway.ini to " + SETTINGS_FILE )
+      print("[NOTICE] Copying config/nsaway.ini to " + SETTINGS_FILE )
+    log(LogLevel.NOTICE,"Copying config/nsaway.ini to " + SETTINGS_FILE )
     os.system("cp " + source + " " + SETTINGS_FILE)
 
   # On first use check if there is icon file

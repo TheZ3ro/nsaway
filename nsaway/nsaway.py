@@ -159,14 +159,15 @@ def startup_checks():
     args.remove('--cs')
     copy_settings = True
 
-  # Check all other args
-  if len(args) > 0:
-    exit_log(LogLevel.ERROR, "Argument not understood. Try with `{1} -h`".format(sys.argv[0]))
-
   # Check if program is run as root, else exit.
   # Root is needed to patrolling.
   if not os.geteuid() == 0:
-    exit_log(LogLevel.ERROR, "This program needs to run as root.")
+    # Can't do exit_log because we don't have permission :D
+    sys.exit("[ERROR] This program needs to run as root.")
+
+  # Check all other args
+  if len(args) > 0:
+    exit_log(LogLevel.ERROR, "Argument not understood. Try with `{1} -h`".format(sys.argv[0]))
 
   # On first use copy nsaway.ini to /etc/nsaway.ini
   if not os.path.isfile(SETTINGS_FILE) or copy_settings:

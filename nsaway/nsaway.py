@@ -41,13 +41,15 @@ Options:
 
 # For the plugin loader, just bunch of s**t
 # Should be made better
-def load_plugin(name):
+def load_plugin(plug, name):
     mod = local_import("plugin/%s" % name)
-    return mod
+    plug[name] = mod
 
-def call_plugin(name, fn, *args, **kwargs):
-    plugin = load_plugin(name)
+def call_plugin(plug, name, fn, *args, **kwargs):
+    plugin = plug[name]
     return getattr(plugin, fn)(*args, **kwargs)
+
+plugins = {}
 
 """
 Load settings from filename
@@ -95,36 +97,42 @@ def load_settings(filename):
     'plugins' : jsonloads(get_setting('plugins').strip())
   })
 
+  try:
+    settings['alert_program'] = get_setting('alert_program')
+  except configparser.NoOptionError:
+    pass
+
   return settings
 
 """
 Main loop that checks every 'sleep_time' seconds if computer is 'compromised'
 """
 def loop(settings):
-  # TODO Starting safepoint
-
   # Write to logs that loop is starting
   msg = "Started patrolling on module: " + str(settings['plugins']) + " every " + str(settings['sleep_time']) + " seconds"
   log(LogLevel.INFO, msg)
   print("[INFO] "+ msg)
 
-  for plugin in settings['plugins']:
-    call_plugin(plugin, 'start', settings)
-
-  if settings['daemon'] == False:
-    sys.exit(1)
+  for plugin in plugins:
+    try:
+        call_plugin(plugins, plugin, 'start', settings)
+    except AttributeError:
+        pass
 
   timeout = {}
 
   # Main loop
   while True:
     # Partolling
-    for plugin in settings['plugins']:
+    for plugin in plugins:
       if not plugin in timeout:
-        msg = call_plugin(plugin, 'tick')
+        msg = call_plugin(plugins, plugin, 'tick')
         if msg != None:
           # Safe call, don't use os.system here!
           subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',msg])
+          if 'alert_program' in settings:
+             if settings['alert_program'] != "" and settings['alert_program'] != None:
+                subprocess.call([settings['alert_program'],msg])
           timeout[plugin] = settings['timeout_cycle']
       else:
         if timeout[plugin]<=0:
@@ -140,11 +148,6 @@ Make some checks on startup, like if program are available or something else...
 def startup_checks():
   # Check arguments
   args = sys.argv[1:]
-
-  # Daemon or not?
-  daemon = False
-  if len(args) == 0:
-    daemon = True
 
   # Check for help
   if '-h' in args or '--help' in args:
@@ -174,8 +177,7 @@ def startup_checks():
     source = os.path.join(SOURCES_PATH, "../config/nsaway.ini")
     if not os.path.isfile(source):
       exit_log(LogLevel.ERROR,"You have lost your settings file. Get a new copy of the nsaway.ini and place it in /etc/ or in " + SOURCES_PATH + "/")
-    if not daemon:
-      print("[NOTICE] Copying config/nsaway.ini to " + SETTINGS_FILE )
+    print("[NOTICE] Copying config/nsaway.ini to " + SETTINGS_FILE )
     log(LogLevel.NOTICE,"Copying config/nsaway.ini to " + SETTINGS_FILE )
     os.system("cp " + source + " " + SETTINGS_FILE)
 
@@ -184,8 +186,7 @@ def startup_checks():
     source = os.path.join(SOURCES_PATH, "../icons/")
     if not os.path.isdir(source):
       exit_log(LogLevel.ERROR,"You have lost your icon file. Get a new copy of the icons/ folder and place it in " + SOURCES_PATH + "/")
-    if not daemon:
-      print("[NOTICE] Copying icons/ to " + ICON_FILE )
+    print("[NOTICE] Copying icons/ to " + ICON_FILE )
     log(LogLevel.NOTICE,"Copying icons/ to " + ICON_FILE )
     os.system("cp -R " + source + " " + ICON_PATH)
 
@@ -196,16 +197,22 @@ def startup_checks():
   if not is_installed('notify-send'):
     exit_log(LogLevel.ERROR,"notify-send not installed.")
 
-  # Make sure sdmem is present if it will be used.
+  # Loading plugin form plugin folder ;)
+  for plugin in settings['plugins']:
+      load_plugin(plugins,plugin) # Put plugin into plugins
+      ret = call_plugin(plugins, plugin, 'require')
+      if ret != None:
+          exit_log(LogLevel.ERROR,ret)
+
+  # TODO Make sure sdmem is present if it will be used.
   if 'mic' in settings['plugins']:
     if not is_installed('pacmd'):
       exit_log(LogLevel.ERROR,"pacmd (pulse-audio) not installed.")
-  # Make sure sswap is present if it will be used.
+  # TODO Make sure sswap is present if it will be used.
   if 'port' in settings['plugins']:
     if not is_installed('netstat'):
       exit_log(LogLevel.ERROR,"netstat not installed.")
 
-  settings['daemon'] = daemon
   return settings
 
 """

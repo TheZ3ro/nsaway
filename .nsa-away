@@ -23,7 +23,7 @@ notify-send -i /usr/share/icons/nsa-away.png "Ciao" "<span color='blue'><i><b>Ci
 
 pacmd list-source-outputs | grep -A25 'index: ' | grep -A25 'flags: $' | grep -A25 `pactl info | grep '^.*\Default Source: .*$' | awk '{print $3}'` | grep 'application.process.id' | awk -F\" '{print $2}'
 
-ls -l -R /proc 2> /dev/null | grep /dev/video
+ls -l -R /proc 2> /dev/null | grep -m1 /dev/video | awk -F"->" '{print $2}'
 
 grep sudo /var/log/auth.log /var/log/messages /var/log/secure
 

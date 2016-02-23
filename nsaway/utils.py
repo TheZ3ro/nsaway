@@ -70,6 +70,14 @@ def exit_log(level, msg):
   sys.exit("[{0}] {1}".format(level,msg))
 
 """
+
+"""
+def is_str(s):
+  if hasattr(s, 'lower'):
+      return True
+  return False
+
+"""
 Check if a program is installed
 """
 def is_installed(program):

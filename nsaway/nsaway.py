@@ -49,6 +49,10 @@ def call_plugin(plug, name, fn, *args, **kwargs):
     plugin = plug[name]
     return getattr(plugin, fn)(*args, **kwargs)
 
+def plugin_attr(plug, name, attr):
+    plugin = plug[name]
+    return getattr(plugin, attr)
+
 plugins = {}
 
 """
@@ -128,8 +132,12 @@ def loop(settings):
       if not plugin in timeout:
         msg = call_plugin(plugins, plugin, 'tick')
         if msg != None:
+          mod_name = plugin_attr(plugins,plugin,"__module_name__")
+          tmpl = "{2}{0}{3} : {1}"
+          # Log without HTML
+          log(LogLevel.WARN,tmpl.format(mod_name,msg,"",""))
           # Safe call, don't use os.system here!
-          subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',msg])
+          subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',tmpl.format(mod_name,msg,"<b>","</b>")])
           if 'alert_program' in settings:
              if settings['alert_program'] != "" and settings['alert_program'] != None:
                 subprocess.call([settings['alert_program'],msg])
@@ -202,16 +210,13 @@ def startup_checks():
       load_plugin(plugins,plugin) # Put plugin into plugins
       ret = call_plugin(plugins, plugin, 'require')
       if ret != None:
-          exit_log(LogLevel.ERROR,ret)
-
-  # TODO Make sure sdmem is present if it will be used.
-  if 'mic' in settings['plugins']:
-    if not is_installed('pacmd'):
-      exit_log(LogLevel.ERROR,"pacmd (pulse-audio) not installed.")
-  # TODO Make sure sswap is present if it will be used.
-  if 'port' in settings['plugins']:
-    if not is_installed('netstat'):
-      exit_log(LogLevel.ERROR,"netstat not installed.")
+          if is_str(ret):
+              if not is_installed(ret):
+                  exit_log(LogLevel.ERROR,ret)
+          else:
+              for p in ret:
+                  if not is_installed(p):
+                        exit_log(LogLevel.ERROR,ret)
 
   return settings
 

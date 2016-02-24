@@ -5,11 +5,6 @@ import utils
 
 __module_name__ = "SSLstrip"
 
-gateway = {
-    'ip':None,
-    'mac':None
-}
-
 import httplib, ssl, socket, hashlib
 from urlparse import urlparse
 

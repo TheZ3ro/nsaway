@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "0.1.0"
+__version__ = "0.1.2"
 
 import subprocess
 import platform
@@ -149,6 +149,7 @@ def loop(settings, p_settings):
           # Log without HTML
           log(LogLevel.WARN,tmpl.format(mod_name,msg,"",""))
           # Safe call, don't use os.system here!
+          os.environ['DISPLAY'] = ':0.0'
           subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',tmpl.format(mod_name,msg,"<b>","</b>")])
           if 'alert_program' in settings:
              if settings['alert_program'] != "" and settings['alert_program'] != None:

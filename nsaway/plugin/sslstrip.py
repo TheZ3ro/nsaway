@@ -23,12 +23,13 @@ def connect(url):
         return resp
 
 def require():
-    return ["openssl"] # sslstrip.py require "openssl"
+    return None # sslstrip.py
 
 def start(*args, **kwargs):
     if args != ():
         sites = args[0]['test_site']
     else:
+        # Default hardcoded Trusted website
         sites = ["https://www.google.com","https://thezero.org"]
     for site in sites:
         r = connect(site)

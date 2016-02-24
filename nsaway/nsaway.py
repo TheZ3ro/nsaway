@@ -95,31 +95,43 @@ def load_settings(filename):
   config.read(filename)
 
   # Build settings
-  settings = dict({
+  settings = dict({})
+  settings['config'] = {
     'timeout_cycle' : get_setting('timeout', 'INT'),
     'sleep_time' : get_setting('sleep', 'FLOAT'),
     'plugins' : jsonloads(get_setting('plugins').strip())
-  })
+  }
 
   try:
-    settings['alert_program'] = get_setting('alert_program')
+    settings['config']['alert_program'] = get_setting('alert_program')
   except configparser.NoOptionError:
     pass
+
+  for section_name in config.sections():
+    if section_name != "config":
+      settings[section_name] = {}
+      for name, value in config.items(section_name):
+        settings[section_name][name] = value
 
   return settings
 
 """
 Main loop that checks every 'sleep_time' seconds if computer is 'compromised'
 """
-def loop(settings):
+def loop(settings, p_settings):
   # Write to logs that loop is starting
   msg = "Started patrolling on module: " + str(settings['plugins']) + " every " + str(settings['sleep_time']) + " seconds"
   log(LogLevel.INFO, msg)
   print("[INFO] "+ msg)
 
+  # Wake up all the plugin (or who want a start-up)
   for plugin in plugins:
     try:
-        call_plugin(plugins, plugin, 'start', settings)
+        # Maybe plugin has some settings in the ini file :thumbsup:
+        if plugin in p_settings:
+            call_plugin(plugins, plugin, 'start', p_settings[plugin])
+        else:
+            call_plugin(plugins, plugin, 'start')
     except AttributeError:
         pass
 
@@ -130,7 +142,7 @@ def loop(settings):
     # Partolling
     for plugin in plugins:
       if not plugin in timeout:
-        msg = call_plugin(plugins, plugin, 'tick')
+        msg = call_plugin(plugins, plugin, 'tick') # Plugin tick
         if msg != None:
           mod_name = plugin_attr(plugins,plugin,"__module_name__")
           tmpl = "{2}{0}{3} : {1}"
@@ -206,7 +218,7 @@ def startup_checks():
     exit_log(LogLevel.ERROR,"notify-send not installed.")
 
   # Loading plugin form plugin folder ;)
-  for plugin in settings['plugins']:
+  for plugin in settings['config']['plugins']:
       load_plugin(plugins,plugin) # Put plugin into plugins
       ret = call_plugin(plugins, plugin, 'require')
       if ret != None:
@@ -226,6 +238,9 @@ Start-up function, very nice :)
 def go():
   # Run startup checks and load settings
   settings = startup_checks()
+  plug_settings = settings.copy()
+  del plug_settings['config']
+  settings = settings['config']
 
   # Define exit handler now that settings are loaded...
   def exit_handler(signum, frame):
@@ -246,7 +261,7 @@ def go():
   signal.signal(signal.SIGUSR1, halt_handler)
 
   # Start main loop
-  loop(settings)
+  loop(settings, plug_settings)
 
 if __name__=="__main__":
   go()

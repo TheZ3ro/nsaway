@@ -70,7 +70,7 @@ def exit_log(level, msg):
   sys.exit("[{0}] {1}".format(level,msg))
 
 """
-
+Check is "s" is a string
 """
 def is_str(s):
   if hasattr(s, 'lower'):

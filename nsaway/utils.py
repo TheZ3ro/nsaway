@@ -51,7 +51,7 @@ def local_import(name, globals=None, locals=None, fromlist=None):
             fp.close()
 
 def create_timed_rotating_log(path):
-    logger.setLevel(logging.NOTSET)               # See https://docs.python.org/2/library/logging.html#levels
+    logger.setLevel(logging.INFO)               # See https://docs.python.org/2/library/logging.html#levels
     handler = TimedRotatingFileHandler(LOG_FILE,  # https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler
                                        when="midnight",
                                        interval=1,

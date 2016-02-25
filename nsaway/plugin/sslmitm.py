@@ -7,7 +7,15 @@ __module_name__ = "SSL MiTM"
 
 from urlparse import urlparse
 
-sites = {}
+safe = {}
+
+def ssl_fingerprint(site):
+    u = urlparse(site)
+    line = os.popen("echo | openssl s_client -connect "+u.netloc+":443 2>/dev/null | openssl x509 -noout -fingerprint").read().rstrip()
+    if "Fingerprint=" in line:
+        fp = line.split("=")[1]
+        return fp
+    return None
 
 def require():
     return ["openssl"] # sslmitm.py require "openssl"
@@ -18,17 +26,27 @@ def start(*args, **kwargs):
     else:
         # Default hardcoded Trusted website
         sites[0] = ["https://www.google.com","https://thezero.org"]
+    for site in sites:
+        fp = ssl_fingerprint(site)
+        if fp != None:
+            safe[site] = fp
 
 def tick(*args, **kwargs):
     msg = None
     import random
     site = random.choice(sites[0])
-    u = urlparse(site)
-    line = os.popen("echo | openssl s_client -connect "+u.netloc+":443 2>/dev/null | openssl x509 -noout -subject").read().rstrip()
-    sections = line.split("/")
-    for l in sections:
-        if "CN=" in l:
-            subject = l.split("=")[1]
-            if not u.netloc in subject:
-                msg = "Wrong certificate for "+subject+" "+u.netloc
+    r = ssl_fingerprint(site)
+    if r != None and r != safe[site]:
+        tamp = True
+
+    if tamp == True:
+        n = 1 # The random site is already changed
+        for site in safe.keys():
+            if site == rand_site:
+                break
+            r = ssl_fingerprint(site)
+            if r != None and r != safe[site]:
+                n+=1
+        if n > 2:
+            msg = n+" Trusted Certificate has been tampered!"
     return msg

@@ -15,9 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
 import imp
 import os, sys
+import logging
+from datetime import datetime
+import time
+from logging.handlers import TimedRotatingFileHandler
 
 # Set the settings filename here
 SETTINGS_FILE = '/etc/nsaway.ini'
@@ -26,6 +29,7 @@ LOG_FILE = '/var/log/nsaway.log'
 # iconfile is hardcoded
 ICON_PATH = '/usr/share/pixmaps/nsaway/'
 ICON_FILE = ICON_PATH+'nsaway_mini.png'
+logger = logging.getLogger("Rotating Log")
 
 def local_import(name, globals=None, locals=None, fromlist=None):
     # Fast path: see if the module has already been imported.
@@ -46,28 +50,22 @@ def local_import(name, globals=None, locals=None, fromlist=None):
         if fp:
             fp.close()
 
-class LogLevel:
-  INFO = "I" # Just some info, almost useless
-  WARN = "W" # Warning situation on the system
-  ERROR = "E" # Errors running nsaway
-  NOTICE = "N" # Notice about some unwanted action on nsaway
-
-"""
-Write message in the log file
-"""
-def log(level, msg):
-  contents = '[{0}] {1} | {2}\n'.format(str(datetime.now()), level, msg)
-  with open(LOG_FILE, 'a+') as log:
-    log.write(contents)
+def create_timed_rotating_log(path):
+    logger.setLevel(logging.NOTSET)               # See https://docs.python.org/2/library/logging.html#levels
+    handler = TimedRotatingFileHandler(LOG_FILE,  # https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler
+                                       when="midnight",
+                                       interval=1,
+                                       backupCount=30)
+    handler.suffix = "%Y%m%d"
+    logger.addHandler(handler)
 
 """
 Write message in the log file and exit with message
 """
-def exit_log(level, msg):
-  contents = '[{0}] {1} | {2}\n'.format(str(datetime.now()), level, msg)
-  with open(LOG_FILE, 'a+') as log:
-    log.write(contents)
-  sys.exit("[{0}] {1}".format(level,msg))
+def exit_log(msg):
+  logger.error(msg)
+  sys.exit("[ERROR] {0}".format(msg))
+
 
 """
 Check is "s" is a string

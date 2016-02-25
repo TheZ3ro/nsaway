@@ -31,7 +31,7 @@ help_message = """
 NSAway is a simple Snooper Detection System for Paranoid people
 Settings can be changed in /etc/nsaway.ini
 This program needs to run as root.
-Executing without argoment will demonize the process (if possible)
+Executing without arguments will demonize the process (if possible)
 
 Options:
   -h --help:         Show this help
@@ -121,7 +121,7 @@ Main loop that checks every 'sleep_time' seconds if computer is 'compromised'
 def loop(settings, p_settings):
   # Write to logs that loop is starting
   msg = "Started patrolling on module: " + str(settings['plugins']) + " every " + str(settings['sleep_time']) + " seconds"
-  log(LogLevel.INFO, msg)
+  logger.info(msg)
   print("[INFO] "+ msg)
 
   # Wake up all the plugin (or who want a start-up)
@@ -147,7 +147,7 @@ def loop(settings, p_settings):
           mod_name = plugin_attr(plugins,plugin,"__module_name__")
           tmpl = "{2}{0}{3} : {1}"
           # Log without HTML
-          log(LogLevel.WARN,tmpl.format(mod_name,msg,"",""))
+          logger.warn(tmpl.format(mod_name,msg,"",""))
           # Safe call, don't use os.system here!
           os.environ['DISPLAY'] = ':0.0'
           subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',tmpl.format(mod_name,msg,"<b>","</b>")])
@@ -189,26 +189,29 @@ def startup_checks():
     # Can't do exit_log because we don't have permission :D
     sys.exit("[ERROR] This program needs to run as root.")
 
+  # Starts logs rotation system
+  create_timed_rotating_log(LOG_FILE)
+
   # Check all other args
   if len(args) > 0:
-    exit_log(LogLevel.ERROR, "Argument not understood. Try with `{1} -h`".format(sys.argv[0]))
+    exit_log("Argument not understood. Try with `{1} -h`".format(sys.argv[0]))
 
   # On first use copy nsaway.ini to /etc/nsaway.ini
   if not os.path.isfile(SETTINGS_FILE) or copy_settings:
     source = os.path.join(SOURCES_PATH, "../config/nsaway.ini")
     if not os.path.isfile(source):
-      exit_log(LogLevel.ERROR,"You have lost your settings file. Get a new copy of the nsaway.ini and place it in /etc/ or in " + SOURCES_PATH + "/")
+      exit_log("You have lost your settings file. Get a new copy of the nsaway.ini and place it in /etc/ or in " + SOURCES_PATH + "/")
     print("[NOTICE] Copying config/nsaway.ini to " + SETTINGS_FILE )
-    log(LogLevel.NOTICE,"Copying config/nsaway.ini to " + SETTINGS_FILE )
+    logger.debug("Copying config/nsaway.ini to " + SETTINGS_FILE )
     os.system("cp " + source + " " + SETTINGS_FILE)
 
   # On first use check if there is icon file
   if not os.path.isfile(ICON_FILE):
     source = os.path.join(SOURCES_PATH, "../icons/")
     if not os.path.isdir(source):
-      exit_log(LogLevel.ERROR,"You have lost your icon file. Get a new copy of the icons/ folder and place it in " + SOURCES_PATH + "/")
+      exit_log("You have lost your icon file. Get a new copy of the icons/ folder and place it in " + SOURCES_PATH + "/")
     print("[NOTICE] Copying icons/ to " + ICON_FILE )
-    log(LogLevel.NOTICE,"Copying icons/ to " + ICON_FILE )
+    logger.debug("Copying icons/ to " + ICON_FILE )
     os.system("cp -R " + source + " " + ICON_PATH)
 
   # Load settings
@@ -216,7 +219,7 @@ def startup_checks():
 
   # Make sure notify-send is present.
   if not is_installed('notify-send'):
-    exit_log(LogLevel.ERROR,"notify-send not installed.")
+    exit_log("notify-send not installed.")
 
   # Loading plugin form plugin folder ;)
   for plugin in settings['config']['plugins']:
@@ -225,11 +228,11 @@ def startup_checks():
       if ret != None:
           if is_str(ret):
               if not is_installed(ret):
-                  exit_log(LogLevel.ERROR,ret)
+                  exit_log(ret)
           else:
               for p in ret:
                   if not is_installed(p):
-                        exit_log(LogLevel.ERROR,ret)
+                        exit_log(ret)
 
   return settings
 
@@ -246,13 +249,13 @@ def go():
   # Define exit handler now that settings are loaded...
   def exit_handler(signum, frame):
     # We don't use exit_log because we want to exit without errors
-    log(LogLevel.INFO,"Exiting because exit signal was received")
+    logger.info("Exiting because exit signal was received")
     sys.exit(0)
 
   # Define also an halt handler
   def halt_handler(signum, frame):
     # TODO
-    log(LogLevel.INFO,"Halt handler, what?")
+    logger.info("Halt handler, what?")
     # sys.exit(0)
 
   # Register handlers for clean exit of program

@@ -21,11 +21,12 @@ def require():
     return ["openssl"] # sslmitm.py require "openssl"
 
 def start(*args, **kwargs):
+    sites = []
     if args != ():
-        sites[0] = args[0]['test_site']
+        sites = args[0]['test_site']
     else:
         # Default hardcoded Trusted website
-        sites[0] = ["https://www.google.com","https://thezero.org"]
+        sites = ["https://www.google.com","https://thezero.org"]
     for site in sites:
         fp = ssl_fingerprint(site)
         if fp != None:
@@ -33,8 +34,9 @@ def start(*args, **kwargs):
 
 def tick(*args, **kwargs):
     msg = None
+    tamp = False
     import random
-    site = random.choice(sites[0])
+    site = random.choice(safe.keys())
     r = ssl_fingerprint(site)
     if r != None and r != safe[site]:
         tamp = True

@@ -20,6 +20,7 @@ import logging
 from datetime import datetime
 import time
 from logging.handlers import TimedRotatingFileHandler
+from log_formatter import NsaFormatter
 
 # Set the settings filename here
 SETTINGS_FILE = '/etc/nsaway.ini'
@@ -50,11 +51,13 @@ def local_import(name, globals=None, locals=None, fromlist=None):
             fp.close()
 
 def create_timed_rotating_log(path):
+    logFormatter = NsaFormatter()
     logger.setLevel(logging.INFO)               # See https://docs.python.org/2/library/logging.html#levels
     handler = TimedRotatingFileHandler(LOG_FILE,  # https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler
                                        when="midnight",
                                        interval=1,
                                        backupCount=30)
+    handler.setFormatter(logFormatter)
     handler.suffix = "%Y%m%d"
     logger.addHandler(handler)
 

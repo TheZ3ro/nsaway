@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 import subprocess
 import platform
@@ -100,7 +100,8 @@ def load_settings(filename):
   settings['config'] = {
     'timeout_cycle' : get_setting('timeout', 'INT'),
     'sleep_time' : get_setting('sleep', 'FLOAT'),
-    'plugins' : jsonloads(get_setting('plugins').strip())
+    'plugins' : jsonloads(get_setting('plugins').strip()),
+    'show_notify' : get_setting('show_notify', 'BOOL')
   }
 
   try:
@@ -149,9 +150,12 @@ def loop(settings, p_settings):
           tmpl = "{2}{0}{3} : {1}"
           # Log without HTML
           logger.warn(tmpl.format(mod_name,msg,"",""))
-          # Safe call, don't use os.system here!
-          os.environ['DISPLAY'] = ':0.0'
-          subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',tmpl.format(mod_name,msg,"<b>","</b>")])
+          # Check if show_notify is enabled
+          if settings['show_notify'] == True:
+             # Fix for X11 on some Linux Distro
+             os.environ['DISPLAY'] = ':0.0'
+             # Safe call, don't use os.system here!
+             subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',tmpl.format(mod_name,msg,"<b>","</b>")])
           if 'alert_program' in settings:
              if settings['alert_program'] != "" and settings['alert_program'] != None:
                 subprocess.call([settings['alert_program'],msg])
@@ -219,8 +223,8 @@ def startup_checks():
   settings = load_settings(SETTINGS_FILE)
 
   # Make sure notify-send is present.
-  if not is_installed('notify-send'):
-    exit_log("notify-send not installed.")
+  if not is_installed('notify-send') and settings['config']['show_notify'] == True:
+    exit_log("notify-send not installed. If you are on a server disable the 'show_notify' option in nsaway.ini file")
 
   # Loading plugin form plugin folder ;)
   for plugin in settings['config']['plugins']:

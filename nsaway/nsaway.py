@@ -23,6 +23,7 @@ import os, sys, signal
 from time import sleep
 import logging
 from utils import *
+from ex_thread import PropagatingThread
 
 # Sources Path
 SOURCES_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -126,16 +127,28 @@ def loop(settings, p_settings):
   logger.info(msg)
   print("[INFO] "+ msg)
 
+  threads = []
+
   # Wake up all the plugin (or who want a start-up)
   for plugin in plugins:
-    try:
-        # Maybe plugin has some settings in the ini file :thumbsup:
-        if plugin in p_settings:
-            call_plugin(plugins, plugin, 'start', p_settings[plugin])
-        else:
-            call_plugin(plugins, plugin, 'start')
-    except AttributeError:
-        pass
+    # Maybe plugin has some settings in the ini file :thumbsup:
+    if plugin in p_settings:
+        # call_plugin(plugins, plugin, 'start', p_settings[plugin])
+        t = PropagatingThread(target=call_plugin, args=(plugins, plugin, 'start', p_settings[plugin],))
+        t.start()
+        threads.append(t)
+    else:
+        # call_plugin(plugins, plugin, 'start')
+        t = PropagatingThread(target=call_plugin, args=(plugins, plugin, 'start',))
+        t.start()
+        threads.append(t)
+
+  try:
+      for x in threads:
+          x.join()
+          threads.remove(x)
+  except AttributeError:
+      pass
 
   timeout = {}
 

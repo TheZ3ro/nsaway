@@ -51,6 +51,20 @@ Edit the ***/etc/nsaway.ini*** file:
  - Edit the '*plugin*' list as you wish based on the plugin installed
 
 
+### Feature
+
+The IDS is based on Plugins.
+Plugins are called every interval (default: 3.0 seconds) and they can do various task or checks on the System.
+You can select the plugin list to load in the **/etc/nsaway.ini** file.
+
+#### Plugins
+
+ - video.py:  Check if a /dev/video device is used
+ - arp_poison.py:  Check if the MAC address of default Gateway changes
+ - sslstrip.py:  Check if there are changes on the page of 2 or more trusted website
+ - sslmitm.py:  Check Fingerprint changes of 2 or more trusted website
+
+
 ### Credits
 Based on code from [hephaest0s/USBkill](https://github.com/hephaest0s/usbkill/)<br/>
 Based on idea from [LCyberspazio/eyecatcher](https://github.com/LCyberspazio/eyefinder)<br/><br/>

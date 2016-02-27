@@ -21,6 +21,35 @@ Otherwise this program can be useful if:
 
 **And you want to detect suspicious behavior**
 
+### Installation (only on GNU/Linux)
+
+#### On Desktop
+
+Make sure you have installed "*notify-send*" and **root** can send notify.
+
+    $ sudo su
+    % notify-send "Hello World, who is listening?"
+
+Download a .deb package *(not available)* or Clone this repo and run **setup.py**
+
+    $ git clone https://github.com/TheZ3ro/nsaway
+    $ sudo python setup.py install
+
+#### On Server
+
+Download a .deb package *(not available)* or Clone this repo and run **setup.py**
+
+    $ git clone https://github.com/TheZ3ro/nsaway
+    $ sudo python setup.py install
+
+Edit the ***/etc/nsaway.ini*** file:
+ - Set '*show_notify*' to **False**
+
+
+    $ sudo sed -i '' 's/show_notify = True/show_notify = False/g' /etc/nsaway.ini
+
+ - Edit the '*plugin*' list as you wish based on the plugin installed
+
 
 ### Credits
 Based on code from [hephaest0s/USBkill](https://github.com/hephaest0s/usbkill/)<br/>

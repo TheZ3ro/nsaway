@@ -26,6 +26,8 @@ from log_formatter import NsaFormatter
 SETTINGS_FILE = '/etc/nsaway.ini'
 # Logfile is hardcoded
 LOG_FILE = '/var/log/nsaway.log'
+# PID file is hardcoded
+PID_FILE = '/var/run/nsaway.pid'
 # iconfile is hardcoded
 ICON_PATH = '/usr/share/pixmaps/nsaway/'
 ICON_FILE = ICON_PATH+'nsaway_mini.png'
@@ -66,8 +68,14 @@ Write message in the log file and exit with message
 """
 def exit_log(msg):
   logger.error(msg)
+  os.remove(PID_FILE)
   sys.exit("[ERROR] {0}".format(msg))
 
+"""
+Return the PID of a process
+"""
+def pidof(process):
+  return os.popen('pidof %s' % process).read().rstrip()
 
 """
 Check is "s" is a string

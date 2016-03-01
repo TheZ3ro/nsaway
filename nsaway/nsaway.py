@@ -252,6 +252,13 @@ def startup_checks():
                   if not is_installed(p):
                         exit_log(ret)
 
+  if not os.path.isfile(PID_FILE):
+      # PID_FILE don't exist. No prob
+      with open(PID_FILE, 'a+') as pidf:
+          pidf.write(str(os.getpid()))
+  else:
+      exit_log("nsaway is already running.")
+
   return settings
 
 """
@@ -268,6 +275,7 @@ def go():
   def exit_handler(signum, frame):
     # We don't use exit_log because we want to exit without errors
     logger.info("Exiting because exit signal was received")
+    os.remove(PID_FILE)
     sys.exit(0)
 
   # Define also an halt handler

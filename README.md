@@ -6,7 +6,7 @@
 
 NSAway is a Military-Grade® Snooper Detection System (last generation IDS).
 
-I'm kidding, It's just a daemon that listen for some (suspicious) events.
+I'm kidding, It's just a daemon that listens for some (suspicious) events.
 
 The name comes from NSA-Away (keep the NSA away from your PC) or from NSA-Way (do things the NSA way, Paranoid mode On).
 
@@ -54,7 +54,7 @@ Edit the ***/etc/nsaway.ini*** file:
 ### Feature
 
 The IDS is based on Plugins.
-Plugins are called every interval (default: 3.0 seconds) and they can do various task or checks on the System.
+Plugins are called on every interval (default: 3.0 seconds) and they can do various tasks or checks on the System.
 You can select the plugin list to load in the **/etc/nsaway.ini** file.
 
 #### Plugins

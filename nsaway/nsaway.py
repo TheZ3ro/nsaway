@@ -28,6 +28,8 @@ from ex_thread import PropagatingThread
 # Sources Path
 SOURCES_PATH = os.path.dirname(os.path.realpath(__file__))
 #sys.path.append(SOURCES_PATH)
+halt = False
+do_report = False
 
 help_message = """
 NSAway is a simple Snooper Detection System for Paranoid people
@@ -151,6 +153,14 @@ def loop(settings, p_settings):
       pass
 
   timeout = {}
+  tmpl = "{2}{0}{3} : {1}"
+  report = []
+
+  # Fix for X11 on some Linux Distro
+  os.environ['DISPLAY'] = ':0.0'
+
+  global halt
+  global do_report
 
   # Main loop
   while True:
@@ -160,24 +170,36 @@ def loop(settings, p_settings):
         msg = call_plugin(plugins, plugin, 'tick') # Plugin tick
         if msg != None:
           mod_name = plugin_attr(plugins,plugin,"__module_name__")
-          tmpl = "{2}{0}{3} : {1}"
-          # Log without HTML
-          logger.warn(tmpl.format(mod_name,msg,"",""))
-          # Check if show_notify is enabled
-          if settings['show_notify'] == True:
-             # Fix for X11 on some Linux Distro
-             os.environ['DISPLAY'] = ':0.0'
-             # Safe call, don't use os.system here!
-             subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',tmpl.format(mod_name,msg,"<b>","</b>")])
-          if 'alert_program' in settings:
-             if settings['alert_program'] != "" and settings['alert_program'] != None:
-                subprocess.call([settings['alert_program'],msg])
+          if halt == False:
+              # Log without HTML
+              logger.warn(tmpl.format(mod_name,msg,"",""))
+              # Check if show_notify is enabled
+              if settings['show_notify'] == True:
+                 # Safe call, don't use os.system here!
+                 subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',tmpl.format(mod_name,msg,"<b>","</b>")])
+              if 'alert_program' in settings:
+                 if settings['alert_program'] != "" and settings['alert_program'] != None:
+                    subprocess.call([settings['alert_program'],msg])
+          else:
+              # Fill the report list. We will print this later.
+              report.append((mod_name,msg))
           timeout[plugin] = settings['timeout_cycle']
       else:
         if timeout[plugin]<=0:
           timeout.pop(plugin)
         else:
           timeout[plugin] -= 1
+
+    if do_report == True and len(report)>0:
+        do_report = False
+        msg_report = ""
+        for rep in report:
+            # Log every single alert
+            logger.warn(tmpl.format(rep[0],rep[1],"",""))
+            # Make the Report message
+            msg_report += tmpl.format(rep[0],rep[1],"<b>","</b>")
+        # Safe call, don't use os.system here!
+        subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',msg_report])
 
     sleep(settings['sleep_time'])
 
@@ -203,6 +225,16 @@ def startup_checks():
   if '-P' in args:
     args.remove('-P')
     plugin_list = True
+
+  halt_settings = False
+  if '--halt' in args:
+    args.remove('--halt')
+    halt_settings = True
+
+  running_settings = False
+  if '--running' in args:
+    args.remove('--running')
+    running_settings = True
 
   copy_settings = False
   if '--cs' in args:
@@ -267,10 +299,23 @@ def startup_checks():
 
   if not os.path.isfile(PID_FILE):
       # PID_FILE don't exist. No prob
-      with open(PID_FILE, 'a+') as pidf:
-          pidf.write(str(os.getpid()))
+      if halt_settings == True or running_settings == True:
+          sys.exit("[ERROR] nsaway is not running!!")
+      else:
+          with open(PID_FILE, 'a+') as pidf:
+              pidf.write(str(os.getpid()))
   else:
-      exit_log("nsaway is already running.")
+      with open(PID_FILE, 'r') as pidf:
+          pid = pidf.read()
+          if halt_settings == True:
+            print("Halted notify on PID "+pid)
+            os.system("/bin/kill -SIGUSR1 "+pid)
+            sys.exit(0)
+          elif running_settings == True:
+            print("nsaway is running with PID "+pid)
+            sys.exit(0)
+          else:
+            exit_log("nsaway is already running.")
 
   return settings
 
@@ -293,9 +338,16 @@ def go():
 
   # Define also an halt handler
   def halt_handler(signum, frame):
-    # TODO
-    logger.info("Halt handler, what?")
-    # sys.exit(0)
+    global halt
+    global do_report
+    if halt == False:
+        halt = True
+        do_report = False
+        logger.info("Notification will be halted")
+    else:
+        halt = False
+        do_report = True
+        logger.info("Notification will be resumed")
 
   # Register handlers for clean exit of program
   for sig in [signal.SIGINT, signal.SIGTERM, signal.SIGQUIT, ]:

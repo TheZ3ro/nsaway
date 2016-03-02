@@ -196,6 +196,14 @@ def startup_checks():
     print(sys.argv[0], __version__)
     sys.exit(0)
 
+  plugin_list = False
+  if '--plugins' in args:
+    args.remove('--plugins')
+    plugin_list = True
+  if '-P' in args:
+    args.remove('-P')
+    plugin_list = True
+
   copy_settings = False
   if '--cs' in args:
     args.remove('--cs')
@@ -234,6 +242,11 @@ def startup_checks():
 
   # Load settings
   settings = load_settings(SETTINGS_FILE)
+
+  if plugin_list == True:
+    print("Installed Plugin: "+str(list_installed_plugin(os.path.join(SOURCES_PATH,"plugin"))))
+    print("Enabled Plugin: "+str(settings['config']['plugins']))
+    sys.exit(0)
 
   # Make sure notify-send is present.
   if not is_installed('notify-send') and settings['config']['show_notify'] == True:

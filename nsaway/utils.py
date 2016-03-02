@@ -63,6 +63,15 @@ def create_timed_rotating_log(path):
     handler.suffix = "%Y%m%d"
     logger.addHandler(handler)
 
+
+"""
+Return a list of PY file from a folder
+"""
+def list_installed_plugin(d_path):
+  # list py files from a folder
+  files = [x.split(".")[0] for x in os.listdir(d_path) if os.path.isfile(d_path+os.sep+x) and x.split(".")[1] == 'py']
+  return files
+
 """
 Write message in the log file and exit with message
 """

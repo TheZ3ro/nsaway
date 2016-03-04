@@ -190,16 +190,17 @@ def loop(settings, p_settings):
         else:
           timeout[plugin] -= 1
 
-    if do_report == True and len(report)>0:
+    if do_report == True:
         do_report = False
-        msg_report = ""
-        for rep in report:
-            # Log every single alert
-            logger.warn(tmpl.format(rep[0],rep[1],"",""))
-            # Make the Report message
-            msg_report += tmpl.format(rep[0],rep[1],"<b>","</b>")
-        # Safe call, don't use os.system here!
-        subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',msg_report])
+        if len(report)>0:
+            msg_report = ""
+            for rep in report:
+                # Log every single alert
+                logger.warn(tmpl.format(rep[0],rep[1],"",""))
+                # Make the Report message
+                msg_report += tmpl.format(rep[0],rep[1],"<b>","</b>")
+            # Safe call, don't use os.system here!
+            subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',msg_report])
 
     sleep(settings['sleep_time'])
 

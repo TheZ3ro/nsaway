@@ -23,7 +23,7 @@ def require():
 def start(*args, **kwargs):
     sites = []
     if args != ():
-        sites = args[0]['test_site']
+        sites = args[0]['safe_site']
     else:
         # Default hardcoded Trusted website
         sites = ["https://www.google.com","https://thezero.org"]
@@ -36,9 +36,9 @@ def tick(*args, **kwargs):
     msg = None
     tamp = False
     import random
-    site = random.choice(safe.keys())
-    r = ssl_fingerprint(site)
-    if r != None and r != safe[site]:
+    rand_site = random.choice(safe.keys())
+    r = ssl_fingerprint(rand_site)
+    if r != None and r != safe[rand_site]:
         tamp = True
 
     if tamp == True:

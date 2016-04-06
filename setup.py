@@ -32,7 +32,8 @@ setup = {
     "dest_dir":"/usr/share/", # will be added a *name* folder
     "data_files":[
       (SETTINGS_FILE, ['config/nsaway.ini']),
-      (ICON_PATH, ['icons/nsaway_large.png','icons/nsaway_mini.png','icons/nsaway.png'])
+      (ICON_PATH, ['icons/nsaway_large.png','icons/nsaway_mini.png','icons/nsaway.png']),
+      ('/etc/init.d/nsaway', ['config/daemon_nsaway.sh'], '+x')
     ],
     "console_entry":[
       ['nsaway','nsaway/nsaway.py']
@@ -71,6 +72,9 @@ def install(dest_dir,data_files,console_entry,path_dir):
         for ele in data_pair[1]:
             print(" | "+ele+" -> "+data_pair[0])
             system_call("cp "+ele+" "+data_pair[0])
+            if len(data_pair) == 3:
+                print(" | Fixing permission "+data_pair[0]+" to "+data_pair[2])
+                system_call("chmod "+data_pair[2]+" "+data_pair[0])
     if path_dir != None:
         print("Creating symbolic link for executable files")
         for exe_pair in console_entry:

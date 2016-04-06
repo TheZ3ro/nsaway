@@ -27,7 +27,7 @@ def require():
 
 def start(*args, **kwargs):
     if args != ():
-        sites = args[0]['test_site']
+        sites = args[0]['safe_site']
     else:
         # Default hardcoded Trusted website
         sites = ["https://www.google.com","https://thezero.org"]

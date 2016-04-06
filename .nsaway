@@ -9,7 +9,6 @@
 - start-stop-daemon
 - Halt Notify (daemon keep logging) + Restart Report
 
-- Safe-Checkpoint (the system is Safe) [json]
 - Configuration file [ini]
 
 ##############################################################

@@ -18,12 +18,17 @@
 __version__ = "0.1.3"
 
 import subprocess
-import platform
+import multiprocessing
 import os, sys, signal
 from time import sleep
 import logging
 from utils import *
 from ex_thread import PropagatingThread
+
+try:
+  from tray import *
+except ImportError:
+  pass
 
 # Sources Path
 SOURCES_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -46,16 +51,16 @@ Options:
 # For the plugin loader, just bunch of s**t
 # Should be made better
 def load_plugin(plug, name):
-    mod = local_import("plugin/%s" % name)
-    plug[name] = mod
+  mod = local_import("plugin/%s" % name)
+  plug[name] = mod
 
 def call_plugin(plug, name, fn, *args, **kwargs):
-    plugin = plug[name]
-    return getattr(plugin, fn)(*args, **kwargs)
+  plugin = plug[name]
+  return getattr(plugin, fn)(*args, **kwargs)
 
 def plugin_attr(plug, name, attr):
-    plugin = plug[name]
-    return getattr(plugin, attr)
+  plugin = plug[name]
+  return getattr(plugin, attr)
 
 plugins = {}
 
@@ -330,9 +335,17 @@ def go():
   del plug_settings['config']
   settings = settings['config']
 
+  # TrayIcon setup
+  d = multiprocessing.Process(name='daemon', target=tray)
+  d.daemon = True
+  d.start()
+
   # Define exit handler now that settings are loaded...
   def exit_handler(signum, frame):
     # We don't use exit_log because we want to exit without errors
+    if d.is_alive() == True:
+      d.terminate()
+    d.join()
     logger.info("Exiting because exit signal was received")
     os.remove(PID_FILE)
     sys.exit(0)

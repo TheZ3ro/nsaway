@@ -32,7 +32,7 @@ setup = {
     "dest_dir":"/usr/share/", # will be added a *name* folder
     "data_files":[
       (SETTINGS_FILE, ['config/nsaway.ini']),
-      (ICON_PATH, ['icons/nsaway_large.png','icons/nsaway_mini.png','icons/nsaway.png']),
+      (ICON_PATH, ['icons/nsaway_large.png','icons/nsaway_mini.png','icons/nsaway.png','icons/good.ico','icons/alert.ico']),
       ('/etc/init.d/nsaway', ['config/daemon_nsaway.sh'], '+x')
     ],
     "console_entry":[

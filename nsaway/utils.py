@@ -76,15 +76,26 @@ def list_installed_plugin(d_path):
 Write message in the log file and exit with message
 """
 def exit_log(msg):
-  logger.error(msg)
-  os.remove(PID_FILE)
-  sys.exit("[ERROR] {0}".format(msg))
+  if msg == '' or msg == 0 or msg == '0':
+    os.remove(PID_FILE)
+    sys.exit(0)
+  else:
+    logger.error(msg)
+    os.remove(PID_FILE)
+    sys.exit("[ERROR] {0}".format(msg))
 
 """
 Return the PID of a process
 """
 def pidof(process):
   return os.popen('pidof %s' % process).read().rstrip()
+
+"""
+Return the path of an icon file if exist
+"""
+def get_icon_path(iconfile):
+  icof = os.path.join(ICON_PATH,iconfile)
+  return icof if os.path.isfile(icof) else None
 
 """
 Check is "s" is a string

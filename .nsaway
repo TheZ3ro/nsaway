@@ -18,9 +18,9 @@ which pacmd
 which netstat
 which lsusb
 
-notify-send -i /usr/share/pixmaps/nsaway/nsaway_mini.png "Ciao" "<i><b>ARP</b></i>"
+notify-send -i /usr/share/pixmaps/nsaway/nsaway_mini.png "Ciao" "<i><b>Ciao</b></i>"
 
-pacmd list-source-outputs | grep -A25 'index: ' | grep -A25 'flags: $' | grep -A25 `pactl info | grep '^.*\Default Source: .*$' | awk '{print $3}'` | grep 'application.process.id' | awk -F\" '{print $2}'
+pacmd list-source-outputs | grep 'application.process.id' | awk -F\" '{print $2}'
 
 ls -l -R /proc 2> /dev/null | grep -m1 /dev/video | awk -F"->" '{print $2}'
 

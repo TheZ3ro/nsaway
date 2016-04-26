@@ -44,11 +44,11 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
   def __init__(self, icon, parent=None):
     QtGui.QSystemTrayIcon.__init__(self, icon, parent)
     menu = QtGui.QMenu(parent)
-    #changeicon = menu.addAction("Update")
+    changeicon = menu.addAction("Reset Status")
     exitAction = menu.addAction("Exit")
     self.setContextMenu(menu)
     exitAction.triggered.connect(quit)
-    #changeicon.triggered.connect(self.updateIcon)
+    changeicon.triggered.connect(self.reset_icon)
     self.thread = QtCore.QThread()
     self.listener = Listener()
     self.listener.moveToThread(self.thread)
@@ -59,7 +59,7 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     QtCore.QTimer.singleShot(0, self.thread.start)
 
   def signal_received(self, message):
-    if message == True:
+    if message == 'True':
         update_tray_icon(self,'alert')
     else:
         update_tray_icon(self,'good')
@@ -69,11 +69,14 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     self.thread.quit()
     self.thread.wait()
 
+  def reset_icon(self):
+    update_tray_icon(self,'good')
+
 def quit():
   QtGui.qApp.quit()
   os.kill(os.getppid(), signal.SIGTERM)
 
-def update_tray_icon(tray,staus):
+def update_tray_icon(tray,status):
   # status can only be (good, alert)
   tray.setIcon(QtGui.QIcon(get_icon_path(status+".ico")))
 

@@ -28,6 +28,7 @@ SETTINGS_FILE = '/etc/nsaway.ini'
 LOG_FILE = '/var/log/nsaway.log'
 # PID file is hardcoded
 PID_FILE = '/var/run/nsaway.pid'
+ZMQ_SOCK = 'ipc:///tmp/nsaway_sock'
 # iconfile is hardcoded
 ICON_PATH = '/usr/share/pixmaps/nsaway/'
 ICON_FILE = ICON_PATH+'nsaway_mini.png'

@@ -17,8 +17,27 @@
 from PyQt4 import QtGui, QtCore
 import os, sys
 import signal
+import zmq
 from os.path import join
-from utils import get_icon_path
+from utils import get_icon_path, ZMQ_SOCK
+
+class Listener(QtCore.QObject):
+    message = QtCore.pyqtSignal(str)
+
+    def __init__(self):
+        QtCore.QObject.__init__(self)
+        # Socket to talk to server
+        context = zmq.Context()
+        self.socket = context.socket(zmq.SUB)
+        self.socket.connect (ZMQ_SOCK)
+        self.socket.setsockopt(zmq.SUBSCRIBE, '')
+
+        self.running = True
+
+    def loop(self):
+        while self.running:
+            string = self.socket.recv()
+            self.message.emit(string)
 
 class SystemTrayIcon(QtGui.QSystemTrayIcon):
 
@@ -30,6 +49,25 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     self.setContextMenu(menu)
     exitAction.triggered.connect(quit)
     #changeicon.triggered.connect(self.updateIcon)
+    self.thread = QtCore.QThread()
+    self.listener = Listener()
+    self.listener.moveToThread(self.thread)
+
+    self.thread.started.connect(self.listener.loop)
+    self.listener.message.connect(self.signal_received)
+
+    QtCore.QTimer.singleShot(0, self.thread.start)
+
+  def signal_received(self, message):
+    if message == True:
+        update_tray_icon(self,'alert')
+    else:
+        update_tray_icon(self,'good')
+
+  def closeEvent(self, event):
+    self.listener.running = False
+    self.thread.quit()
+    self.thread.wait()
 
 def quit():
   QtGui.qApp.quit()

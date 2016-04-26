@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "0.1.3"
+__version__ = "0.1.5"
 
-import subprocess
-import multiprocessing
 import os, sys, signal
+import subprocess
+from multiprocessing import Process, Value
+import zmq
 from time import sleep
 import logging
 from utils import *
@@ -29,6 +30,10 @@ try:
   from tray import *
 except ImportError:
   pass
+
+context = zmq.Context()
+sock = context.socket(zmq.PUB)
+sock.bind(ZMQ_SOCK)
 
 # Sources Path
 SOURCES_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -174,6 +179,7 @@ def loop(settings, p_settings):
       if not plugin in timeout:
         msg = call_plugin(plugins, plugin, 'tick') # Plugin tick
         if msg != None:
+          sock.send('True')
           mod_name = plugin_attr(plugins,plugin,"__module_name__")
           if halt == False:
               # Log without HTML
@@ -192,6 +198,8 @@ def loop(settings, p_settings):
       else:
         if timeout[plugin]<=0:
           timeout.pop(plugin)
+          if len(timeout) == 0:
+            sock.send('False')
         else:
           timeout[plugin] -= 1
 
@@ -336,9 +344,13 @@ def go():
   settings = settings['config']
 
   # TrayIcon setup
-  d = multiprocessing.Process(name='daemon', target=tray)
+  #try:
+  d = Process(target=tray,)
   d.daemon = True
   d.start()
+  #except NameError:
+    #pass
+  sock.send('False')
 
   # Define exit handler now that settings are loaded...
   def exit_handler(signum, frame):

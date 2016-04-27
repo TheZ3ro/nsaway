@@ -15,11 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 import os, sys, signal
 import subprocess
-from multiprocessing import Process, Value
 import zmq
 from time import sleep
 import logging
@@ -51,6 +50,10 @@ Options:
   -h --help:         Show this help
      --version:      Print version and exit
      --cs:           Copy local settings ./nsaway.ini to /etc/nsaway.ini
+     --plugins       List the plugins
+     --gui           Start the NSAway GUI
+     --halt          Halt NSAway daemon
+     --running       Check if NSAway daemon is running
 """
 
 # For the plugin loader, just bunch of s**t
@@ -255,6 +258,10 @@ def startup_checks():
     args.remove('--cs')
     copy_settings = True
 
+  if '--gui' in args:
+    os.system("python "+SOURCES_PATH+"/tray.py &")
+    exit(0)
+
   # Check if program is run as root, else exit.
   # Root is needed to patrolling.
   if not os.geteuid() == 0:
@@ -344,20 +351,11 @@ def go():
   settings = settings['config']
 
   # TrayIcon setup
-  #try:
-  d = Process(target=tray,)
-  d.daemon = True
-  d.start()
-  #except NameError:
-    #pass
   sock.send('False')
 
   # Define exit handler now that settings are loaded...
   def exit_handler(signum, frame):
     # We don't use exit_log because we want to exit without errors
-    if d.is_alive() == True:
-      d.terminate()
-    d.join()
     logger.info("Exiting because exit signal was received")
     os.remove(PID_FILE)
     sys.exit(0)

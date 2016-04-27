@@ -1,4 +1,5 @@
-#
+#!/usr/bin/env python
+
 # Author: TheZero <io@thezero.org>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,30 +15,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4 import QtGui, QtCore
-import os, sys
+import os, sys, subprocess
 import signal
+from PyQt4 import QtGui, QtCore
 import zmq
 from os.path import join
-from utils import get_icon_path, ZMQ_SOCK
+from utils import get_icon_path, ZMQ_SOCK, ICON_FILE
 
 class Listener(QtCore.QObject):
     message = QtCore.pyqtSignal(str)
 
     def __init__(self):
-        QtCore.QObject.__init__(self)
-        # Socket to talk to server
-        context = zmq.Context()
-        self.socket = context.socket(zmq.SUB)
-        self.socket.connect (ZMQ_SOCK)
-        self.socket.setsockopt(zmq.SUBSCRIBE, '')
+      QtCore.QObject.__init__(self)
+      # Socket to talk to server
+      context = zmq.Context()
+      self.socket = context.socket(zmq.SUB)
+      self.socket.connect(ZMQ_SOCK)
+      self.socket.setsockopt(zmq.SUBSCRIBE, '')
 
-        self.running = True
+      self.poller = zmq.Poller()
+      self.poller.register(self.socket, zmq.POLLIN)
+
+      self.running = True
 
     def loop(self):
-        while self.running:
-            string = self.socket.recv()
-            self.message.emit(string)
+      while self.running:
+        socks = dict(self.poller.poll(500))
+        print socks
+        if self.socket in socks and socks[self.socket] == zmq.POLLIN:
+          string = self.socket.recv()
+          print string
+          self.message.emit(string)
 
 class SystemTrayIcon(QtGui.QSystemTrayIcon):
 
@@ -47,7 +55,7 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     changeicon = menu.addAction("Reset Status")
     exitAction = menu.addAction("Exit")
     self.setContextMenu(menu)
-    exitAction.triggered.connect(quit)
+    exitAction.triggered.connect(self.quit)
     changeicon.triggered.connect(self.reset_icon)
     self.thread = QtCore.QThread()
     self.listener = Listener()
@@ -59,22 +67,22 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     QtCore.QTimer.singleShot(0, self.thread.start)
 
   def signal_received(self, message):
-    if message == 'True':
+    print message
+    if message != 'None':
+        # Safe call, don't use os.system here!
+        subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',message])
         update_tray_icon(self,'alert')
     else:
         update_tray_icon(self,'good')
 
-  def closeEvent(self, event):
-    self.listener.running = False
-    self.thread.quit()
-    self.thread.wait()
-
   def reset_icon(self):
     update_tray_icon(self,'good')
 
-def quit():
-  QtGui.qApp.quit()
-  os.kill(os.getppid(), signal.SIGTERM)
+  def quit(self, a):
+    self.listener.running = False
+    self.thread.terminate()
+    self.thread.wait()
+    QtGui.qApp.quit()
 
 def update_tray_icon(tray,status):
   # status can only be (good, alert)
@@ -91,3 +99,6 @@ def tray():
   trayIcon.setIcon(QtGui.QIcon(get_icon_path("good.ico")))
 
   sys.exit(app.exec_())
+
+if __name__=="__main__":
+  tray()

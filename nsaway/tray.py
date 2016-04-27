@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from PyQt4 import QtGui, QtCore
 import os, sys, subprocess
 import signal
-from PyQt4 import QtGui, QtCore
 import zmq
 from os.path import join
-from utils import get_icon_path, ZMQ_SOCK, ICON_FILE
+from utils import get_icon_path, ZMQ_SSOCK, ICON_FILE
 
 class Listener(QtCore.QObject):
     message = QtCore.pyqtSignal(str)
@@ -30,7 +30,7 @@ class Listener(QtCore.QObject):
       # Socket to talk to server
       context = zmq.Context()
       self.socket = context.socket(zmq.SUB)
-      self.socket.connect(ZMQ_SOCK)
+      self.socket.connect(ZMQ_SSOCK)
       self.socket.setsockopt(zmq.SUBSCRIBE, '')
 
       self.poller = zmq.Poller()
@@ -41,10 +41,8 @@ class Listener(QtCore.QObject):
     def loop(self):
       while self.running:
         socks = dict(self.poller.poll(500))
-        print socks
         if self.socket in socks and socks[self.socket] == zmq.POLLIN:
           string = self.socket.recv()
-          print string
           self.message.emit(string)
 
 class SystemTrayIcon(QtGui.QSystemTrayIcon):
@@ -67,7 +65,6 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     QtCore.QTimer.singleShot(0, self.thread.start)
 
   def signal_received(self, message):
-    print message
     if message != 'None':
         # Safe call, don't use os.system here!
         subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',message])
@@ -91,12 +88,11 @@ def update_tray_icon(tray,status):
 def tray():
   app = QtGui.QApplication(['NSAway'])
   style = app.style()
-  ico = QtGui.QIcon(style.standardPixmap(QtGui.QStyle.SP_FileIcon))
+  ico = QtGui.QIcon(get_icon_path("good.ico"))
   w = QtGui.QWidget()
 
   trayIcon = SystemTrayIcon(ico, w)
   trayIcon.show()
-  trayIcon.setIcon(QtGui.QIcon(get_icon_path("good.ico")))
 
   sys.exit(app.exec_())
 

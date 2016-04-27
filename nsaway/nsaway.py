@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "0.1.6"
+__version__ = "0.1.5"
 
 import os, sys, signal
 import subprocess
@@ -32,7 +32,7 @@ except ImportError:
 
 context = zmq.Context()
 sock = context.socket(zmq.PUB)
-sock.bind(ZMQ_SOCK)
+sock.bind(ZMQ_PSOCK)
 
 # Sources Path
 SOURCES_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -182,15 +182,14 @@ def loop(settings, p_settings):
       if not plugin in timeout:
         msg = call_plugin(plugins, plugin, 'tick') # Plugin tick
         if msg != None:
-          sock.send('True')
           mod_name = plugin_attr(plugins,plugin,"__module_name__")
           if halt == False:
               # Log without HTML
               logger.warn(tmpl.format(mod_name,msg,"",""))
               # Check if show_notify is enabled
               if settings['show_notify'] == True:
-                 # Safe call, don't use os.system here!
-                 subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',tmpl.format(mod_name,msg,"<b>","</b>")])
+                 # Send the notify
+                 sock.send(tmpl.format(mod_name,msg,"<b>","</b>"))
               if 'alert_program' in settings:
                  if settings['alert_program'] != "" and settings['alert_program'] != None:
                     subprocess.call([settings['alert_program'],msg])
@@ -202,7 +201,7 @@ def loop(settings, p_settings):
         if timeout[plugin]<=0:
           timeout.pop(plugin)
           if len(timeout) == 0:
-            sock.send('False')
+            sock.send('None')
         else:
           timeout[plugin] -= 1
 
@@ -215,8 +214,7 @@ def loop(settings, p_settings):
                 logger.warn(tmpl.format(rep[0],rep[1],"",""))
                 # Make the Report message
                 msg_report += tmpl.format(rep[0],rep[1],"<b>","</b>")
-            # Safe call, don't use os.system here!
-            subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',msg_report])
+            sock.send(msg_report)
 
     sleep(settings['sleep_time'])
 
@@ -351,7 +349,7 @@ def go():
   settings = settings['config']
 
   # TrayIcon setup
-  sock.send('False')
+  sock.send('None')
 
   # Define exit handler now that settings are loaded...
   def exit_handler(signum, frame):

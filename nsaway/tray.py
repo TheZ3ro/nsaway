@@ -88,12 +88,18 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     update_tray_icon(self,'good')
 
   def exec_plugin(self,p):
-    result = os.popen('gksudo "nsaway -p '+p+'"').read()
-    subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',result])
-    if "No problem detected" in result:
-      update_tray_icon(self,'good')
-    else:
-      update_tray_icon(self,'alert')
+    result = ''
+    if is_installed('gksudo'):
+        result = os.popen('gksudo "nsaway -p '+p+'"').read()
+    elif is_installed('pkexec'):
+        result = os.popen('pkexec "nsaway -p '+p+'"').read()
+    # Send the notify
+    if result != ''
+      subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',result])
+      if "No problem detected" in result:
+        update_tray_icon(self,'good')
+      else:
+        update_tray_icon(self,'alert')
 
   def quit(self, a):
     self.listener.running = False

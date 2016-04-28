@@ -94,7 +94,7 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     elif is_installed('pkexec'):
         result = os.popen('pkexec "nsaway -p '+p+'"').read()
     # Send the notify
-    if result != ''
+    if result != '':
       subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',result])
       if "No problem detected" in result:
         update_tray_icon(self,'good')

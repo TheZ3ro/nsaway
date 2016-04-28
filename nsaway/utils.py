@@ -99,6 +99,17 @@ def get_icon_path(iconfile):
   icof = os.path.join(ICON_PATH,iconfile)
   return icof if os.path.isfile(icof) else None
 
+def check_install(ret):
+  if ret != None:
+    if is_str(ret):
+        if not is_installed(ret):
+            return True
+    else:
+        for p in ret:
+            if not is_installed(p):
+                  return True
+  return False
+
 """
 Check is "s" is a string
 """

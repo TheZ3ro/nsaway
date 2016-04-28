@@ -25,14 +25,8 @@ import logging
 from utils import *
 from ex_thread import PropagatingThread
 
-try:
-  from tray import *
-except ImportError:
-  pass
-
 context = zmq.Context()
 sock = context.socket(zmq.PUB)
-sock.bind(ZMQ_PSOCK)
 
 # Sources Path
 SOURCES_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -181,8 +175,8 @@ def loop(settings, p_settings):
     for plugin in plugins:
       if not plugin in timeout:
         msg = call_plugin(plugins, plugin, 'tick') # Plugin tick
+        mod_name = plugin_attr(plugins,plugin,"__module_name__")
         if msg != None:
-          mod_name = plugin_attr(plugins,plugin,"__module_name__")
           if halt == False:
               # Log without HTML
               logger.warn(tmpl.format(mod_name,msg,"",""))
@@ -257,64 +251,81 @@ def startup_checks():
     copy_settings = True
 
   if '--gui' in args:
-    os.system("python "+SOURCES_PATH+"/tray.py &")
+    os.system(SOURCES_PATH+"/tray.py &")
     exit(0)
+
+  e_plugin = ""
+  if '-p' in args:
+    args.remove('-p')
+    e_plugin = args[0]
+    args.remove(args[0])
+
+  # Check all other args
+  if len(args) > 0:
+    sys.exit("Argument not understood. Try with `{1} -h`".format(sys.argv[0]))
+
+  # On first use copy nsaway.ini to /etc/nsaway.ini
+  if not os.path.isfile(SETTINGS_FILE) or copy_settings:
+    source = os.path.join(SOURCES_PATH, "../config/nsaway.ini")
+    if not os.path.isfile(source):
+      sys.exit("You have lost your settings file. Get a new copy of the nsaway.ini and place it in /etc/ or in " + SOURCES_PATH + "/")
+    print("[NOTICE] Copying config/nsaway.ini to " + SETTINGS_FILE )
+    os.system("cp " + source + " " + SETTINGS_FILE)
+
+  # Load settings
+  settings = load_settings(SETTINGS_FILE)
+
+  if plugin_list == True:
+    p_in = list_installed_plugin(os.path.join(SOURCES_PATH,"plugin"))
+    p_en = settings['config']['plugins']
+    p_dis = list(set(p_in) - set(p_en))
+    print("Installed Plugin: "+str(p_in))
+    print("Enabled Plugin: "+str(p_en))
+    print("Disabled Plugin: "+str(p_dis))
+    sys.exit(0)
+
+  # Make sure notify-send is present.
+  if not is_installed('notify-send') and settings['config']['show_notify'] == True:
+    sys.exit("notify-send not installed. If you are on a server disable the 'show_notify' option in nsaway.ini file")
 
   # Check if program is run as root, else exit.
   # Root is needed to patrolling.
-  if not os.geteuid() == 0:
+  if os.geteuid() != 0:
     # Can't do exit_log because we don't have permission :D
     sys.exit("[ERROR] This program needs to run as root.")
 
   # Starts logs rotation system
   create_timed_rotating_log(LOG_FILE)
 
-  # Check all other args
-  if len(args) > 0:
-    exit_log("Argument not understood. Try with `{1} -h`".format(sys.argv[0]))
-
-  # On first use copy nsaway.ini to /etc/nsaway.ini
-  if not os.path.isfile(SETTINGS_FILE) or copy_settings:
-    source = os.path.join(SOURCES_PATH, "../config/nsaway.ini")
-    if not os.path.isfile(source):
-      exit_log("You have lost your settings file. Get a new copy of the nsaway.ini and place it in /etc/ or in " + SOURCES_PATH + "/")
-    print("[NOTICE] Copying config/nsaway.ini to " + SETTINGS_FILE )
-    logger.debug("Copying config/nsaway.ini to " + SETTINGS_FILE )
-    os.system("cp " + source + " " + SETTINGS_FILE)
-
-  # On first use check if there is icon file
-  if not os.path.isfile(ICON_FILE):
-    source = os.path.join(SOURCES_PATH, "../icons/")
-    if not os.path.isdir(source):
-      exit_log("You have lost your icon file. Get a new copy of the icons/ folder and place it in " + SOURCES_PATH + "/")
-    print("[NOTICE] Copying icons/ to " + ICON_FILE )
-    logger.debug("Copying icons/ to " + ICON_FILE )
-    os.system("cp -R " + source + " " + ICON_PATH)
-
-  # Load settings
-  settings = load_settings(SETTINGS_FILE)
-
-  if plugin_list == True:
-    print("Installed Plugin: "+str(list_installed_plugin(os.path.join(SOURCES_PATH,"plugin"))))
-    print("Enabled Plugin: "+str(settings['config']['plugins']))
-    sys.exit(0)
-
-  # Make sure notify-send is present.
-  if not is_installed('notify-send') and settings['config']['show_notify'] == True:
-    exit_log("notify-send not installed. If you are on a server disable the 'show_notify' option in nsaway.ini file")
-
   # Loading plugin form plugin folder ;)
   for plugin in settings['config']['plugins']:
       load_plugin(plugins,plugin) # Put plugin into plugins
       ret = call_plugin(plugins, plugin, 'require')
-      if ret != None:
-          if is_str(ret):
-              if not is_installed(ret):
-                  exit_log(ret)
-          else:
-              for p in ret:
-                  if not is_installed(p):
-                        exit_log(ret)
+      if check_install(ret) == True:
+        exit_log(ret)
+
+  if e_plugin != "":
+    ps = {}
+    load_plugin(ps,e_plugin)
+    ret = call_plugin(ps, e_plugin, 'require')
+    if check_install(ret) == True:
+      sys.exit(1)
+    try:
+      if e_plugin in settings:
+        call_plugin(ps, e_plugin, 'start', settings[e_plugin])
+      else:
+        call_plugin(ps, e_plugin, 'start')
+    except AttributeError:
+      pass
+    msg = call_plugin(ps, e_plugin, 'tick') # Plugin tick
+    mod_name = plugin_attr(ps,e_plugin,"__module_name__")
+    if msg != None:
+      # Log without HTML
+      logger.warn(tmpl.format(mod_name,msg,"",""))
+      print(tmpl.format(mod_name,msg,"",""))
+    else:
+      print("No problem detected")
+    sys.exit(0)
 
   if not os.path.isfile(PID_FILE):
       # PID_FILE don't exist. No prob
@@ -335,6 +346,9 @@ def startup_checks():
             sys.exit(0)
           else:
             exit_log("nsaway is already running.")
+
+  # Bind the ZeroMQ socks
+  sock.bind(ZMQ_PSOCK)
 
   return settings
 

@@ -50,7 +50,19 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
   def __init__(self, icon, parent=None):
     QtGui.QSystemTrayIcon.__init__(self, icon, parent)
     menu = QtGui.QMenu(parent)
+    s = os.popen("nsaway --plugins").read().split("\n")
+    # Magic
+    s = s[2].split("[")[1].replace("]", "").split(", ")
+    s = [si.replace("'","") for si in s]
+    # It's clean
+    # Plugin
+    for item in s:
+      entry = menu.addAction(item)
+      self.connect(entry,QtCore.SIGNAL('triggered()'), lambda item=item: self.exec_plugin(item))
+    # Finished plugin loading
+    menu.addSeparator()
     changeicon = menu.addAction("Reset Status")
+    menu.addSeparator()
     exitAction = menu.addAction("Exit")
     self.setContextMenu(menu)
     exitAction.triggered.connect(self.quit)
@@ -74,6 +86,14 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
 
   def reset_icon(self):
     update_tray_icon(self,'good')
+
+  def exec_plugin(self,p):
+    result = os.popen('gksudo "nsaway -p '+p+'"').read()
+    subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',result])
+    if "No problem detected" in result:
+      update_tray_icon(self,'good')
+    else:
+      update_tray_icon(self,'alert')
 
   def quit(self, a):
     self.listener.running = False

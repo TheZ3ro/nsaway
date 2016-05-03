@@ -66,6 +66,6 @@ You can select the plugin list to load in the **/etc/nsaway.ini** file.
 
 ### Credits
 Based on code from [hephaest0s/USBkill](https://github.com/hephaest0s/usbkill/)<br/>
-Based on idea from [LCyberspazio/eyecatcher](https://github.com/LCyberspazio/eyefinder)<br/><br/>
+Based on idea from [LCyberspazio/eyecatcher](https://github.com/LCyberspazio/eyefinder/)<br/><br/>
 Eagle Icon by: Martin Berube<br/>
 Alert Icon by: [Nitish Kumar](https://www.iconfinder.com/nitishkmrk)<br/>

@@ -25,31 +25,29 @@ Otherwise this program can be useful if:
 
 #### On Desktop
 
-Make sure you have installed "*notify-send*" and **root** can send notify.
+##### Dependency
+Make sure you have a GUI interface for sudo (**gksudo** on ArchLinux or **pkexec** on Fedora, Ubuntu have both)
 
-    $ sudo su
-    % notify-send "Hello World, who is listening?"
+    $ which gksudo && which pkexec
+
+Install ZeroMQ Python bindings without
+
+    $ pip install pyzmq
+
+**Optional** if you want the GUI interface
+
+    $ pip install pyqt4
+
+Make sure you have installed "*notify-send*" and your user can send notify.
+
+    $ notify-send "Hello World, who is listening?"
+
+##### Installation
 
 Download a .deb package *(not available)* or Clone this repo and run **setup.py**
 
     $ git clone https://github.com/TheZ3ro/nsaway
     $ sudo python setup.py install
-
-#### On Server
-
-Download a .deb package *(not available)* or Clone this repo and run **setup.py**
-
-    $ git clone https://github.com/TheZ3ro/nsaway
-    $ sudo python setup.py install
-
-Edit the ***/etc/nsaway.ini*** file:
- - Set '*show_notify*' to **False**
-
-
-    $ sudo sed -i '' 's/show_notify = True/show_notify = False/g' /etc/nsaway.ini
-
- - Edit the '*plugin*' list as you wish based on the plugin installed
-
 
 ### Feature
 
@@ -60,6 +58,7 @@ You can select the plugin list to load in the **/etc/nsaway.ini** file.
 #### Plugins
 
  - video.py:  Check if a /dev/video device is used
+ - audio.py:  Check if one of the Audio-Capture-Device is used
  - arp_poison.py:  Check if the MAC address of default Gateway changes
  - sslstrip.py:  Check if there are changes on the page of 2 or more trusted website
  - sslmitm.py:  Check Fingerprint changes of 2 or more trusted website

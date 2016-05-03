@@ -20,7 +20,7 @@ import os, sys, subprocess
 import signal
 import zmq
 from os.path import join
-from utils import get_icon_path, ZMQ_SSOCK, ICON_FILE
+from utils import get_icon_path, is_installed, ZMQ_SSOCK, ICON_FILE
 
 class Listener(QtCore.QObject):
     message = QtCore.pyqtSignal(str)

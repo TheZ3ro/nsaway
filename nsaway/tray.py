@@ -92,7 +92,7 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
     if is_installed('gksudo'):
         result = os.popen('gksudo "nsaway -p '+p+'"').read()
     elif is_installed('pkexec'):
-        result = os.popen('pkexec "nsaway -p '+p+'"').read()
+        result = os.popen('pkexec nsaway -p '+p).read()
     # Send the notify
     if result != '':
       subprocess.call(["notify-send", "-i",ICON_FILE,'NSAway',result])

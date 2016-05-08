@@ -32,9 +32,14 @@ stop)
 ;;
 restart|force-reload)
   echo -n "Restarting $DESC: "
-  start-stop-daemon $STOP_OPTS
-  sleep 1
-  start-stop-daemon $START_OPTS
+  if [ -f $PIDFILE ]; then
+   start-stop-daemon $STOP_OPTS
+   rm -f $PIDFILE
+   sleep 1
+   start-stop-daemon $START_OPTS
+  else
+   start-stop-daemon $START_OPTS
+  fi
   echo "$NAME."
 ;;
 pid)

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=NSAway
+Comment=Detect snooper on your system
+Exec=/usr/bin/nsaway-tray
+Icon=nsaway.png
+Terminal=false
+Categories=Application;System;

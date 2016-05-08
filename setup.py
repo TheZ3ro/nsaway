@@ -33,11 +33,15 @@ setup = {
     "data_files":[
       (SETTINGS_FILE, ['config/nsaway.ini']),
       (ICON_PATH, ['icons/nsaway_large.png','icons/nsaway_mini.png','icons/nsaway.png','icons/good.ico','icons/alert.ico']),
-      ('/etc/init.d/nsaway', ['config/daemon_nsaway.sh'], '+x')
+      ('/usr/share/icons/hicolor/48x48/apps/', ['icons/nsaway.png']),
+      ('/etc/init.d/nsaway', ['config/daemon_nsaway.sh'], '+x'),
+      ('/usr/share/applications/', ['config/nsaway.desktop']),
     ],
     "console_entry":[
-      ['nsaway','nsaway/nsaway.py']
-    ]
+      ['nsaway','nsaway/nsaway.py'],
+      ['nsaway-tray','nsaway/tray.py']
+    ],
+    "postinst":["service nsaway start"],
 }
 
 debug = False
@@ -86,6 +90,9 @@ def install(dest_dir,data_files,console_entry,path_dir):
             print(" | -Fixing executable permission for "+join(path_dir,exe_pair[0]))
             system_call("chmod +x "+join(path_dir,exe_pair[0]))
         print("Checking if "+setup["name"]+" is in $PATH")
+        print("Executing postinst script")
+        for pi in setup["postinst"]:
+            system_call(pi)
         if debug == False:
             if is_installed(setup["name"]):
                 print("Installed Successfully")
@@ -157,7 +164,9 @@ Description: {5}
     postinst = "#!/bin/bash\n"
     for exe_pair in setup["console_entry"]:
         if os.path.isfile(join("/usr/bin",exe_pair[0])):
-            postinst += "ln -s {0} {1}\nchmod +x {1}".format(join(setup["dest_dir"],exe_pair[1]),join("/usr/bin",exe_pair[0]))
+            postinst += "ln -s {0} {1}\nchmod +x {1}\n".format(join(setup["dest_dir"],exe_pair[1]),join("/usr/bin",exe_pair[0]))
+    for pi in setup["postinst"]:
+        postinst += pi + "\n"
     with open(join(build_dir,"DEBIAN/postinst"), 'w+') as pi:
       pi.write(postinst)
     system_call("chmod 775 "+join(build_dir,"DEBIAN/postinst"))

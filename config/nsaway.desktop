@@ -4,6 +4,6 @@ Encoding=UTF-8
 Name=NSAway
 Comment=Detect snooper on your system
 Exec=/usr/bin/nsaway-tray
-Icon=nsaway.png
+Icon=nsaway
 Terminal=false
 Categories=Application;System;

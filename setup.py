@@ -33,7 +33,11 @@ setup = {
     "data_files":[
       (SETTINGS_FILE, ['config/nsaway.ini']),
       (ICON_PATH, ['icons/nsaway_large.png','icons/nsaway_mini.png','icons/nsaway.png','icons/good.ico','icons/alert.ico']),
-      ('/usr/share/icons/hicolor/48x48/apps/', ['icons/nsaway.png']),
+      ('/usr/share/icons/hicolor/16x16/apps/nsaway.png', ['icons/nsaway_nano.png']),
+      ('/usr/share/icons/hicolor/32x32/apps/nsaway.png', ['icons/nsaway_micro.png']),
+      ('/usr/share/icons/hicolor/48x48/apps/nsaway.png', ['icons/nsaway.png']),
+      ('/usr/share/icons/hicolor/128x128/apps/nsaway.png', ['icons/nsaway_medium.png']),
+      ('/usr/share/icons/hicolor/256x256/apps/nsaway.png', ['icons/nsaway_large.png']),
       ('/etc/init.d/nsaway', ['config/daemon_nsaway.sh'], '+x'),
       ('/usr/share/applications/', ['config/nsaway.desktop']),
     ],
@@ -41,7 +45,7 @@ setup = {
       ['nsaway','nsaway/nsaway.py'],
       ['nsaway-tray','nsaway/tray.py']
     ],
-    "postinst":["service nsaway start"],
+    "postinst":["service nsaway start","gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor"],
 }
 
 debug = False

@@ -1,10 +1,11 @@
-- Controllo sulle sorgenti video in uso
-- Controllo sulle registrazioni audio dai microfoni
-- Controllo delle azioni sudo/root
-- Controllo delle porte in ascolto (TCP e UDP)
-- Controllo di inserimento/rimozione USB
-- Controllo data di modifica di files di configurazione sensibili /etc/hosts, /etc/passwd, /etc/shadow
-- Controllo MiTM/SSLstrip
+- Check video source
+- Check audio source
+- Check sudo/root action
+- Check for new listening ports (TCP e UDP)
+- Check insert/remove USB device
+- Check inotify on sensible file  /etc/hosts, /etc/passwd, /etc/shadow
+- Check inotify for file with High Entropy (Anti-Ransomware)
+- Check for MiTM/SSLstrip
 
 - start-stop-daemon
 - Halt Notify (daemon keep logging) + Restart Report
